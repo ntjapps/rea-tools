@@ -1,0 +1,49 @@
+#!/bin/bash
+# REA (Reverse Engineer Anything) CLI in a capped container; the image is built locally on first use from the
+# Dockerfile next to this script (ntjapps/rea-tools; override with REA_TOOLS_DIR). Paths are mounted at the SAME absolute path (/home/GitProjects, /tmp and the current directory).
+#   Base image (default): static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite and package inspection.
+#   Native image: used automatically for `--provider ghidra` and Android/JADX commands, or with REA_NATIVE=1
+#                 (JDK 21 + Ghidra 12.1.4 + jadx-headless-mcp 0.7.1).
+# Env: REA_MEMORY (default 1500m base, 2g native), REA_CPUS (default 2), REA_NATIVE=1, REA_REBUILD=1,
+#      REA_STATE (REA's home, default ~/.local/share/rea-docker).
+# Check `grep MemAvailable /proc/meminfo` first and run one REA job at a time.
+set -euo pipefail
+CTX="${REA_TOOLS_DIR:-$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")}"
+[ -f "$CTX/Dockerfile" ] || { echo "rea: no Dockerfile in $CTX (clone ntjapps/rea-tools)" >&2; exit 2; }
+VERSION="$(sed -n 's/^ARG REA_VERSION=//p' "$CTX/Dockerfile")"
+
+NATIVE="${REA_NATIVE:-}"
+if [ -z "$NATIVE" ]; then
+    for a in "$@"; do
+        case "$a" in ghidra|--provider=ghidra|*android*|*apk*|*jadx*|*dex*) NATIVE=1 ;; esac
+    done
+fi
+if [ -n "$NATIVE" ]; then
+    TARGET=native; IMG="local/rea:${VERSION}-native"; MEM="${REA_MEMORY:-2g}"
+else
+    TARGET=base; IMG="local/rea:${VERSION}"; MEM="${REA_MEMORY:-1500m}"
+fi
+CPUS="${REA_CPUS:-2}"
+
+if [ -n "${REA_REBUILD:-}" ] || ! docker image inspect "$IMG" >/dev/null 2>&1; then
+    # Prefer the image the manual GitHub workflow publishes; build locally when it is absent or REA_REBUILD is set.
+    GHCR="ghcr.io/ntjapps/rea-tools:${IMG#local/rea:}"
+    if [ -z "${REA_REBUILD:-}" ] && docker pull -q "$GHCR" >/dev/null 2>&1; then
+        docker tag "$GHCR" "$IMG"
+    else
+        echo "rea: building $IMG (target $TARGET) from $CTX" >&2
+        docker build --memory=1536m --memory-swap=1536m --target "$TARGET" -t "$IMG" "$CTX" >&2
+    fi
+fi
+
+STATE="${REA_STATE:-$HOME/.local/share/rea-docker}"
+mkdir -p "$STATE"
+MOUNTS=(-v /home/GitProjects:/home/GitProjects -v /tmp:/tmp -v "$STATE":/root)
+case "$PWD" in
+    /home/GitProjects|/home/GitProjects/*|/tmp|/tmp/*) ;;
+    *) MOUNTS+=(-v "$PWD":"$PWD") ;;
+esac
+TTY=(-i)
+[ -t 0 ] && [ -t 1 ] && TTY=(-it)
+exec docker run --rm "${TTY[@]}" --memory="$MEM" --memory-swap="$MEM" --cpus="$CPUS" \
+    "${MOUNTS[@]}" -w "$PWD" "$IMG" "$@"
