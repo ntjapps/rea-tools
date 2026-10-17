@@ -5,7 +5,8 @@
 #   Native image: used automatically for `--provider ghidra` and Android/JADX commands, or with REA_NATIVE=1
 #                 (JDK 21 + Ghidra 12.1.4 + jadx-headless-mcp 0.7.1).
 # Env: REA_MEMORY (default 1500m base, 2g native), REA_CPUS (default 2), REA_NATIVE=1, REA_REBUILD=1,
-#      REA_STATE (REA's home, default ~/.local/share/rea-docker).
+#      REA_STATE (REA's home, default ~/.local/share/rea-docker). Any other REA_* variable (e.g.
+#      REA_GHIDRA_DISABLED_ANALYZERS) is passed into the container unchanged.
 # Check `grep MemAvailable /proc/meminfo` first and run one REA job at a time.
 set -euo pipefail
 CTX="${REA_TOOLS_DIR:-$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")}"
@@ -43,7 +44,12 @@ case "$PWD" in
     /home/GitProjects|/home/GitProjects/*|/tmp|/tmp/*) ;;
     *) MOUNTS+=(-v "$PWD":"$PWD") ;;
 esac
+# Pass REA's own settings through; the wrapper's knobs above stay on the host.
+ENVS=()
+while IFS= read -r v; do
+    case "$v" in REA_MEMORY|REA_CPUS|REA_NATIVE|REA_REBUILD|REA_STATE|REA_TOOLS_DIR) ;; *) ENVS+=(-e "$v") ;; esac
+done < <(compgen -e | grep '^REA_' || true)
 TTY=(-i)
 [ -t 0 ] && [ -t 1 ] && TTY=(-it)
 exec docker run --rm "${TTY[@]}" --memory="$MEM" --memory-swap="$MEM" --cpus="$CPUS" \
-    "${MOUNTS[@]}" -w "$PWD" "$IMG" "$@"
+    "${ENVS[@]}" "${MOUNTS[@]}" -w "$PWD" "$IMG" "$@"
