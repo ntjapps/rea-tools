@@ -3,7 +3,7 @@
 # Dockerfile next to this script (ntjapps/rea-tools; override with REA_TOOLS_DIR). Paths are mounted at the SAME absolute path (/home/GitProjects, /tmp and the current directory).
 #   Base image (default): static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite and package inspection.
 #   Native image: used automatically for `--provider ghidra` and Android/JADX commands, or with REA_NATIVE=1
-#                 (JDK 21 + Ghidra 12.1.4 + jadx-headless-mcp 0.7.1).
+#                 (JDK 21 + Ghidra 12.2 + jadx-headless-mcp 0.8.0).
 # Env: REA_MEMORY (default 1500m base, 2g native), REA_CPUS (default 2), REA_NATIVE=1, REA_REBUILD=1,
 #      REA_STATE (REA's home, default ~/.local/share/rea-docker). Any other REA_* variable (e.g.
 #      REA_GHIDRA_DISABLED_ANALYZERS) is passed into the container unchanged.
