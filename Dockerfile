@@ -1,8 +1,8 @@
 # REA (Reverse Engineer Anything, npm rea-agents) for hosts without Node. Built locally by ../rea on first use.
-#   target "base"   : Node 24 + REA + procps (static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite, packages)
-#   target "native" : base + JDK 21 + Ghidra 12.2 (native decompilation) + jadx-headless-mcp 0.8.0 (Android APKs)
+#   target "base"   : Node 26 + REA + procps (static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite, packages)
+#   target "native" : base + JDK 27 + Ghidra 12.2 (native decompilation) + jadx-headless-mcp 0.8.0 (Android APKs)
 # Every download is pinned and checked against its SHA-256. Bump the ARGs (and the hashes) to update.
-ARG NODE_IMAGE=node:24-bookworm-slim
+ARG NODE_IMAGE=node:26-bookworm-slim
 
 FROM ${NODE_IMAGE} AS base
 ARG REA_VERSION=6.7.0
@@ -13,7 +13,7 @@ RUN apt-get update \
  && npm cache clean --force
 ENTRYPOINT ["rea"]
 
-FROM eclipse-temurin:21-jdk AS jdk
+FROM eclipse-temurin:27-jdk AS jdk
 
 FROM base AS native
 ARG GHIDRA_URL=https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.2_build/ghidra_12.2_PUBLIC_20261016.zip
