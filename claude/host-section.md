@@ -5,8 +5,8 @@
   treat the missing tools as a fault to repair. Use the CLI instead: it runs the same workflows.
 - **CLI:** `rea <command> ... --json` (wrapper `rea` on PATH: `/home/GitProjects/stack-config/rea` forwards to `/home/GitProjects/rea-tools/rea`; the host has no Node,
   so never use `npx rea-agents`). It builds and runs a local image from the Dockerfile in `/home/GitProjects/rea-tools`
-  (the `ntjapps/rea-tools` checkout): `local/rea:<version>` (base) or `local/rea:<version>-native` (JDK 21, Ghidra
-  12.1.4, jadx-headless-mcp), chosen automatically for `--provider ghidra` and Android/APK/JADX commands or with
+  (the `ntjapps/rea-tools` checkout): `local/rea:<version>` (base) or `local/rea:<version>-native` (JDK 27, Ghidra
+  12.2, jadx-headless-mcp), chosen automatically for `--provider ghidra` and Android/APK/JADX commands or with
   `REA_NATIVE=1`. MCP tool names map to kebab-case commands (`analyze_javascript_application` ->
   `rea analyze-javascript-application`); `rea --help` and `rea <command> --help` list commands and flags. Pass absolute
   paths under `/home/GitProjects` or `/tmp` (mounted at the same path; the current directory is mounted too).

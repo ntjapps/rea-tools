@@ -7,7 +7,7 @@ registered.
 
 | File | What it is |
 |---|---|
-| `Dockerfile` | Pinned images. `base`: Node 24 + `rea-agents` + procps (static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite, packages). `native`: base + JDK 21 + Ghidra 12.1.4 + jadx-headless-mcp 0.7.1 (native binaries, Android APKs). Every download is checked against its SHA-256. |
+| `Dockerfile` | Pinned images. `base`: Node 26 + `rea-agents` + procps (static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite, packages). `native`: base + JDK 27 + Ghidra 12.2 + jadx-headless-mcp 0.8.0 (native binaries, Android APKs). Every download is checked against its SHA-256. |
 | `rea` | The CLI wrapper. Builds `local/rea:<version>` or `local/rea:<version>-native` on first use, picks the native image for `--provider ghidra` and Android/APK/JADX commands (or `REA_NATIVE=1`), mounts `/home/GitProjects`, `/tmp` and the current directory at the same paths, caps the container (`REA_MEMORY`, default 1500m base / 2g native; `REA_CPUS`, default 2), and passes REA's own `REA_*` settings (e.g. `REA_GHIDRA_DISABLED_ANALYZERS`) into the container. |
 | `install-skill.sh` | Installs the `reverse-engineer-anything` skill from the `ntjapps/rea` fork at a pinned commit into `$CLAUDE_CONFIG_DIR/skills`, with this host's section (`claude/host-section.md`) inserted at the top. |
 | `claude/host-section.md` | The host rules the skill follows: no MCP registration, use the `rea` CLI, memory checks, one heavy job at a time, no browser/Electron/process/device capture without an explicit instruction. |
@@ -54,7 +54,7 @@ Prerequisites: Docker, `gh` logged in (the skill installer reads the `ntjapps/re
 
    ```bash
    rea --version                 # base image: JavaScript/Electron, .NET, Go, Rust, WASM, SQLite, packages
-   REA_NATIVE=1 rea --version    # native image: + JDK 21, Ghidra, JADX
+   REA_NATIVE=1 rea --version    # native image: + JDK 27, Ghidra, JADX
    ```
 
    If the GHCR package is private, log Docker in first, otherwise the wrapper silently builds locally:
