@@ -129,6 +129,11 @@ plain buildx (no Blacksmith).
 
 Branches: `main` (default) and `dev`; work goes into `dev`, `main` is promoted from it.
 
+## Releases and tags
+
+- No release tags: `main` is the release. Work branches off `dev`, PRs go into `dev`, and `dev` -> `main` happens only by promotion when the owner says so. Do not create `v*` tags here.
+- The image version comes from `REA_VERSION` in the `Dockerfile`, not from a git tag. The owner publishes `ghcr.io/ntjapps/rea-tools` by dispatching `build-images.yaml` on `main` and installs with the Setup and Update steps below; deploys are never run by CI.
+
 ## Update
 
 - REA: bump `REA_VERSION` in the `Dockerfile`, then `REA_REBUILD=1 rea --version` (and `REA_NATIVE=1 REA_REBUILD=1 rea --version`).
