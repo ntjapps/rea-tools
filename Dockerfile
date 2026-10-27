@@ -5,7 +5,7 @@
 ARG NODE_IMAGE=node:26-bookworm-slim
 
 FROM ${NODE_IMAGE} AS base
-ARG REA_VERSION=6.7.0
+ARG REA_VERSION=6.8.0
 RUN apt-get update \
  && apt-get install -y --no-install-recommends procps ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
