@@ -1,7 +1,7 @@
 name: Build REA images
 
 # Manual-only: no push, tag or schedule triggers; start it from the Actions tab (workflow_dispatch).
-# Blacksmith Linux runners (owner rule 2026-11-11: Linux on Blacksmith, Windows on GitHub-hosted, macOS on its own vendor), with plain
+# GitHub-hosted Linux runners (public repo: free minutes; owner rule 2026-11-12), with plain
 # docker/setup-buildx-action: never a useblacksmith/* builder (billed sticky-disk cache).
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
