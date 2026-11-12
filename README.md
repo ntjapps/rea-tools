@@ -8,7 +8,7 @@ registered.
 | File | What it is |
 |---|---|
 | `Dockerfile` | Pinned images. `base`: Node 26 + `rea-agents` + procps (static JavaScript/Electron, .NET, Go, Rust, WASM, SQLite, packages). `native`: base + JDK 27 + Ghidra 12.2 + jadx-headless-mcp 0.8.0 (native binaries, Android APKs). Every download is checked against its SHA-256. |
-| `rea` | The CLI wrapper. Builds `local/rea:<version>` or `local/rea:<version>-native` on first use, picks the native image for `--provider ghidra` and Android/APK/JADX commands (or `REA_NATIVE=1`), mounts `/home/GitProjects`, `/tmp` and the current directory at the same paths, caps the container (`REA_MEMORY`, default 1500m base / 2g native; `REA_CPUS`, default 2), and passes REA's own `REA_*` settings (e.g. `REA_GHIDRA_DISABLED_ANALYZERS`) into the container. |
+| `rea` | The CLI wrapper. Builds `local/rea:<version>` or `local/rea:<version>-native` on first use, picks the native image for `--provider ghidra` and Android/APK/JADX commands (or `REA_NATIVE=1`), runs it as a non-root uid with no capabilities and `--network none` (`REA_NETWORK=1` or a leading `--online` opts in), mounts only the sample paths you pass as arguments read-only at the same absolute path plus one writable output dir (`REA_OUT`, default `$REA_STATE/out`, mounted at `/out`), never `/home/GitProjects`, `/home` or `/tmp` as a whole, caps the container (`REA_MEMORY`, default 1500m base / 2g native; `REA_CPUS`, default 2), and passes REA's own `REA_*` settings (e.g. `REA_GHIDRA_DISABLED_ANALYZERS`) into the container. |
 | `install-skill.sh` | Installs the `reverse-engineer-anything` skill from the `ntjapps/rea` fork at a pinned commit into `$CLAUDE_CONFIG_DIR/skills`, with this host's section (`claude/host-section.md`) inserted at the top. |
 | `claude/host-section.md` | The host rules the skill follows: no MCP registration, use the `rea` CLI, memory checks, one heavy job at a time, no browser/Electron/process/device capture without an explicit instruction. |
 
@@ -19,8 +19,8 @@ Claude Code session
   └─ skill "reverse-engineer-anything"  (~/.claude/skills; loaded only when a task needs it)
        └─ Bash: rea <command> ... --json
             └─ stack-config/rea  ->  rea-tools/rea  (wrapper)
-                 └─ capped container (--memory/--cpus): local/rea:<version>[-native], REA CLI inside
-                      sees /home/GitProjects, /tmp and $PWD at the same absolute paths
+                 └─ capped, non-root, no-network container: local/rea:<version>[-native], REA CLI inside
+                      sees only the sample paths you pass (read-only, same absolute path) + /out (writable)
 ```
 
 No Node, Ghidra or Java on the host, and no MCP server: Claude calls the REA CLI through Bash, one capped container per
@@ -87,8 +87,11 @@ Or invoke it explicitly: `/reverse-engineer-anything <task>`.
 
 Rules the skill follows on this host (from `claude/host-section.md`):
 
-- **Paths:** targets must be absolute paths under `/home/GitProjects`, `/tmp` or the session's current directory;
-  nothing else is mounted in the container. Copy a target there first.
+- **Paths:** pass each target as its own absolute path argument; only those paths are mounted (read-only) and a path that is
+  `/home/GitProjects`, `/home`, `/tmp` or contains them is refused: copy the sample into its own directory first (readable by
+  the container uid, `10001` when you are root). Results go to the output dir (`REA_OUT`).
+- **No network by default:** the container has none; `REA_NETWORK=1` (or `rea --online ...`) only when a command must download
+  something or capture traffic and you asked for it.
 - **One heavy job at a time:** memory is checked before each run; Ghidra/JADX runs are treated like a test suite.
 - **No live capture without an explicit instruction:** browser/Electron/native-UI/process capture, adb device actions
   and network capture run only when you ask for them in that message.
