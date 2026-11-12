@@ -8,8 +8,12 @@
   (the `ntjapps/rea-tools` checkout): `local/rea:<version>` (base) or `local/rea:<version>-native` (JDK 27, Ghidra
   12.2, jadx-headless-mcp), chosen automatically for `--provider ghidra` and Android/APK/JADX commands or with
   `REA_NATIVE=1`. MCP tool names map to kebab-case commands (`analyze_javascript_application` ->
-  `rea analyze-javascript-application`); `rea --help` and `rea <command> --help` list commands and flags. Pass absolute
-  paths under `/home/GitProjects` or `/tmp` (mounted at the same path; the current directory is mounted too).
+  `rea analyze-javascript-application`); `rea --help` and `rea <command> --help` list commands and flags. Pass each
+  target as its own absolute path argument: only those paths are mounted, read-only, at the same path; `/home/GitProjects`,
+  `/home` and `/tmp` themselves (or a path containing them) are refused, so copy a sample into its own directory first. The
+  container runs non-root with no capabilities and **no network**; results go to `$REA_OUT` (default
+  `~/.local/share/rea-docker/out`, `/out` inside). Set `REA_NETWORK=1` (or `rea --online ...`) only when the user asked for a
+  command that must reach the network.
 - **Memory:** the container is capped (`REA_MEMORY`, default 1500m base / 2g native; `REA_CPUS`, default 2). Check
   `grep MemAvailable /proc/meminfo` (>= 1 GB, >= 2.2 GB for Ghidra) first and run one REA job at a time; treat a
   Ghidra or JADX run like a test run (one heavy job host-wide).
