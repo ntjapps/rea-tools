@@ -4,6 +4,9 @@ name: Check scripts
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: blacksmith-2vcpu-ubuntu-2404
